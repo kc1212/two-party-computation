@@ -26,7 +26,7 @@ public class Paillier {
     public final BigInteger q;                   // a random prime (distinct from p)
     public final BigInteger lambda;              // lambda = lcm(p-1, q-1) = (p-1)*(q-1)/gcd(p-1, q-1)
     public final BigInteger n;                   // n = p*q
-    public final BigInteger nsquare;             // nsquare = n*n
+    public final BigInteger n2;                  // n2 = n*n
     public final BigInteger g;                   // a random integer in Z*_{n^2}
     public final BigInteger mu;                  // mu = (L(g^lambda mod n^2))^{-1} mod n, where L(u) = (u-1)/n
 
@@ -34,10 +34,12 @@ public class Paillier {
         public final BigInteger n;
         public final BigInteger n2;
         public final BigInteger g;
-        public PublicKey(BigInteger n, BigInteger n2, BigInteger g) {
+        public final int modLength;
+        public PublicKey(BigInteger n, BigInteger n2, BigInteger g, int modLength) {
             this.n = n;
             this.n2 = n2;
             this.g = g;
+            this.modLength = modLength;
         }
     }
 
@@ -62,7 +64,7 @@ public class Paillier {
                 p.subtract(BigInteger.ONE).gcd(q.subtract(BigInteger.ONE)));
 
         n = p.multiply(q);              // n = p*q
-        nsquare = n.multiply(n);        // nsquare = n*n
+        n2 = n.multiply(n);        // n2 = n*n
 
         BigInteger tmp_g;
         do {
@@ -70,21 +72,25 @@ public class Paillier {
             tmp_g = randomZStarNSquare();
         }
         // verify g, the following must hold: gcd(L(g^lambda mod n^2), n) = 1, where L(u) = (u-1)/n
-        while (tmp_g.modPow(lambda, nsquare).subtract(BigInteger.ONE).divide(n).gcd(n).intValue() != 1);
+        while (tmp_g.modPow(lambda, n2).subtract(BigInteger.ONE).divide(n).gcd(n).intValue() != 1);
         g = tmp_g;
 
         // mu = (L(g^lambda mod n^2))^{-1} mod n, where L(u) = (u-1)/n
-        mu = g.modPow(lambda, nsquare).subtract(BigInteger.ONE).divide(n).modInverse(n);
+        mu = g.modPow(lambda, n2).subtract(BigInteger.ONE).divide(n).modInverse(n);
     }
 
     public BigInteger encrypt(BigInteger m) throws PaillierException {
-        // generate r, a random integer in Z*_n
-        BigInteger r = randomZStarN();
-        return Paillier.encrypt(this.publicKey(), m, r);
+        return Paillier.encrypt(this.publicKey(), m);
     }
 
     public BigInteger encrypt(BigInteger m, BigInteger r) throws PaillierException {
         return Paillier.encrypt(this.publicKey(), m, r);
+    }
+
+    public static BigInteger encrypt(PublicKey pk, BigInteger m) throws PaillierException {
+        // generate r, a random integer in Z*_n
+        BigInteger r = Paillier.randomZStarN(pk.modLength, pk.n);
+        return Paillier.encrypt(pk, m, r);
     }
 
     public static BigInteger encrypt(PublicKey pk, BigInteger m, BigInteger r) throws PaillierException {
@@ -104,22 +110,22 @@ public class Paillier {
 
     public BigInteger decrypt(BigInteger c) throws PaillierException {
         // if c is not in Z*_{n^2}
-        if (c.compareTo(BigInteger.ZERO) < 0 || c.compareTo(nsquare) >= 0 || c.gcd(nsquare).intValue() != 1) {
+        if (c.compareTo(BigInteger.ZERO) < 0 || c.compareTo(n2) >= 0 || c.gcd(n2).intValue() != 1) {
             throw new PaillierException("Paillier.decrypt(BigInteger c): ciphertext c is not in Z*_{n^2}");
         }
 
         // m = L(c^lambda mod n^2) * mu mod n, where L(u) = (u-1)/n
-        return c.modPow(lambda, nsquare).subtract(BigInteger.ONE).divide(n).multiply(mu).mod(n);
+        return c.modPow(lambda, n2).subtract(BigInteger.ONE).divide(n).multiply(mu).mod(n);
     }
 
     public void printValues() {
-        System.out.println("p:       " + p);
-        System.out.println("q:       " + q);
-        System.out.println("lambda:  " + lambda);
-        System.out.println("n:       " + n);
-        System.out.println("nsquare: " + nsquare);
-        System.out.println("g:       " + g);
-        System.out.println("mu:      " + mu);
+        System.out.println("p:      " + p);
+        System.out.println("q:      " + q);
+        System.out.println("lambda: " + lambda);
+        System.out.println("n:      " + n);
+        System.out.println("n2:     " + n2);
+        System.out.println("g:      " + g);
+        System.out.println("mu:     " + mu);
     }
 
     // return a random integer in Z*_n
@@ -129,7 +135,7 @@ public class Paillier {
 
     // return a random integer in Z*_{n^2}
     private BigInteger randomZStarNSquare() {
-        return Paillier.randomZStarN(modLength * 2, nsquare);
+        return Paillier.randomZStarN(modLength * 2, n2);
     }
 
     public static BigInteger randomZStarN(int modLength, BigInteger n) {
@@ -145,6 +151,6 @@ public class Paillier {
 
     // return public key
     public PublicKey publicKey() {
-        return new PublicKey(n, nsquare, g);
+        return new PublicKey(n, n2, g, modLength);
     }
 }
