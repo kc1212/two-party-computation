@@ -1,5 +1,8 @@
 package com.twopc;
 
+import com.twopc.paillier.Paillier;
+import com.twopc.paillier.PaillierException;
+
 import java.math.BigInteger;
 
 public class Util {
@@ -13,5 +16,13 @@ public class Util {
             return BigInteger.valueOf(1);
         }
         return BigInteger.valueOf(0);
+    }
+
+    public static void decryptAndPrint(String name, Paillier phe, BigInteger[] xs) throws PaillierException {
+        System.out.print(name + ":\t");
+        for (BigInteger x  : xs) {
+            System.out.print(phe.decrypt(x) + " ");
+        }
+        System.out.println();
     }
 }

@@ -4,9 +4,7 @@ import com.twopc.paillier.Paillier;
 import com.twopc.paillier.PaillierException;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Bob {
     public class Message {
@@ -30,9 +28,10 @@ public class Bob {
         }
     }
 
-    public Message d1d2(BigInteger ed) throws PaillierException {
+    public Message msg(BigInteger ed) throws PaillierException {
         BigInteger d = phe.decrypt(ed);
         BigInteger x = Util.pow2(l);
+        // alternatively use d.divideAndRemainder(x)
         BigInteger d1 = d.mod(x);
         BigInteger d2 = d.divide(x);
 
@@ -44,7 +43,6 @@ public class Bob {
             }
             ts[i] = phe.encrypt(Util.bitAt(d1, i).add(tmp));
         }
-
         return new Message(phe.encrypt(d1), phe.encrypt(d2), ts);
     }
 
