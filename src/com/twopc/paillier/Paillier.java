@@ -30,6 +30,17 @@ public class Paillier {
     public final BigInteger g;                   // a random integer in Z*_{n^2}
     public final BigInteger mu;                  // mu = (L(g^lambda mod n^2))^{-1} mod n, where L(u) = (u-1)/n
 
+    public class PublicKey {
+        public final BigInteger n;
+        public final BigInteger n2;
+        public final BigInteger g;
+        public PublicKey(BigInteger n, BigInteger n2, BigInteger g) {
+            this.n = n;
+            this.n2 = n2;
+            this.g = g;
+        }
+    }
+
     public Paillier(int modLengthIn) throws PaillierException {
         if (modLengthIn < 8)
             throw new PaillierException("Paillier(int modLength): modLength must be >= 8");
@@ -67,31 +78,28 @@ public class Paillier {
     }
 
     public BigInteger encrypt(BigInteger m) throws PaillierException {
-        // if m is not in Z_n
-        if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(n) >= 0) {
-            throw new PaillierException("Paillier.encrypt(BigInteger m): plaintext m is not in Z_n");
-        }
-
         // generate r, a random integer in Z*_n
         BigInteger r = randomZStarN();
-
-        // c = g^m * r^n mod n^2
-        return (g.modPow(m, nsquare).multiply(r.modPow(n, nsquare))).mod(nsquare);
+        return Paillier.encrypt(this.publicKey(), m, r);
     }
 
     public BigInteger encrypt(BigInteger m, BigInteger r) throws PaillierException {
+        return Paillier.encrypt(this.publicKey(), m, r);
+    }
+
+    public static BigInteger encrypt(PublicKey pk, BigInteger m, BigInteger r) throws PaillierException {
         // if m is not in Z_n
-        if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(n) >= 0) {
+        if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(pk.n) >= 0) {
             throw new PaillierException("Paillier.encrypt(BigInteger m, BigInteger r): plaintext m is not in Z_n");
         }
 
         // if r is not in Z*_n
-        if (r.compareTo(BigInteger.ZERO) < 0 || r.compareTo(n) >= 0 || r.gcd(n).intValue() != 1) {
+        if (r.compareTo(BigInteger.ZERO) < 0 || r.compareTo(pk.n) >= 0 || r.gcd(pk.n).intValue() != 1) {
             throw new PaillierException("Paillier.encrypt(BigInteger m, BigInteger r): random integer r is not in Z*_n");
         }
 
         // c = g^m * r^n mod n^2
-        return (g.modPow(m, nsquare).multiply(r.modPow(n, nsquare))).mod(nsquare);
+        return (pk.g.modPow(m, pk.n2).multiply(r.modPow(pk.n, pk.n2))).mod(pk.n2);
     }
 
     public BigInteger decrypt(BigInteger c) throws PaillierException {
@@ -114,20 +122,17 @@ public class Paillier {
         System.out.println("mu:      " + mu);
     }
 
-    // return a random integer in Z_n
-    public BigInteger randomZN() {
-        BigInteger r;
-
-        do {
-            r = new BigInteger(modLength, new Random());
-        }
-        while (r.compareTo(BigInteger.ZERO) <= 0 || r.compareTo(n) >= 0);
-
-        return r;
+    // return a random integer in Z*_n
+    private BigInteger randomZStarN() {
+        return Paillier.randomZStarN(modLength, n);
     }
 
-    // return a random integer in Z*_n
-    public BigInteger randomZStarN() {
+    // return a random integer in Z*_{n^2}
+    private BigInteger randomZStarNSquare() {
+        return Paillier.randomZStarN(modLength * 2, nsquare);
+    }
+
+    public static BigInteger randomZStarN(int modLength, BigInteger n) {
         BigInteger r;
 
         do {
@@ -138,24 +143,8 @@ public class Paillier {
         return r;
     }
 
-    // return a random integer in Z*_{n^2}
-    public BigInteger randomZStarNSquare() {
-        BigInteger r;
-
-        do {
-            r = new BigInteger(modLength * 2, new Random());
-        }
-        while (r.compareTo(nsquare) >= 0 || r.gcd(nsquare).intValue() != 1);
-
-        return r;
-    }
-
-    // return public key as the vector <n, g>
-    public Vector publicKey() {
-        Vector pubKey = new Vector();
-        pubKey.add(n);
-        pubKey.add(g);
-
-        return pubKey;
+    // return public key
+    public PublicKey publicKey() {
+        return new PublicKey(n, nsquare, g);
     }
 }
