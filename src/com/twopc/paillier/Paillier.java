@@ -20,15 +20,15 @@ import java.math.*;
 import java.util.*;
 
 public class Paillier {
-    private final int CERTAINTY = 64;       // certainty with which primes are generated: 1-2^(-CERTAINTY)
-    final int modLength;                  // length in bits of the modulus n
-    final BigInteger p;                   // a random prime
-    final BigInteger q;                   // a random prime (distinct from p)
-    final BigInteger lambda;              // lambda = lcm(p-1, q-1) = (p-1)*(q-1)/gcd(p-1, q-1)
-    final BigInteger n;                   // n = p*q
-    final BigInteger nsquare;             // nsquare = n*n
-    final BigInteger g;                   // a random integer in Z*_{n^2}
-    final BigInteger mu;                  // mu = (L(g^lambda mod n^2))^{-1} mod n, where L(u) = (u-1)/n
+    private final int CERTAINTY = 64;            // certainty with which primes are generated: 1-2^(-CERTAINTY)
+    public final int modLength;                  // length in bits of the modulus n
+    public final BigInteger p;                   // a random prime
+    public final BigInteger q;                   // a random prime (distinct from p)
+    public final BigInteger lambda;              // lambda = lcm(p-1, q-1) = (p-1)*(q-1)/gcd(p-1, q-1)
+    public final BigInteger n;                   // n = p*q
+    public final BigInteger nsquare;             // nsquare = n*n
+    public final BigInteger g;                   // a random integer in Z*_{n^2}
+    public final BigInteger mu;                  // mu = (L(g^lambda mod n^2))^{-1} mod n, where L(u) = (u-1)/n
 
     public Paillier(int modLengthIn) throws PaillierException {
         if (modLengthIn < 8)
