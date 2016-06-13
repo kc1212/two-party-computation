@@ -47,8 +47,10 @@ public class Bob {
     }
 
     public BigInteger lambda(BigInteger[] es) throws PaillierException {
-        if (Arrays.stream(es).anyMatch(e -> e.compareTo(BigInteger.ZERO) == 0)) {
-            return phe.encrypt(BigInteger.ONE);
+        for (BigInteger e : es) {
+            if (phe.decrypt(e).compareTo(BigInteger.ZERO) == 0) {
+                return phe.encrypt(BigInteger.ONE);
+            }
         }
         return phe.encrypt(BigInteger.ZERO);
     }
