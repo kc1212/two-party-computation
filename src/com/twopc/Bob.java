@@ -34,11 +34,7 @@ public class Bob {
         BigInteger d = phe.decrypt(ed);
         BigInteger x = Util.pow2(l);
         BigInteger d1 = d.mod(x);
-        BigInteger d2 = d.divide(x); // TODO check
-
-        System.out.println(d.toString());
-        System.out.println(d1.toString());
-        System.out.println(d2.toString());
+        BigInteger d2 = d.divide(x);
 
         BigInteger[] ts = new BigInteger[l];
         for (int i = 0; i < l; i++) {
@@ -49,7 +45,7 @@ public class Bob {
             ts[i] = phe.encrypt(Util.bitAt(d1, i).add(tmp));
         }
 
-        return new Message(d1, d2, ts);
+        return new Message(phe.encrypt(d1), phe.encrypt(d2), ts);
     }
 
     public BigInteger lambda(BigInteger[] es) throws PaillierException {

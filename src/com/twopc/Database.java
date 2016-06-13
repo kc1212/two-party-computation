@@ -62,7 +62,7 @@ public class Database {
     }
 
     public void printPt() {
-        pt.forEach(p -> p.print());
+        pt.forEach(Triple::print);
     }
 
     public void decryptAndPrint() throws PaillierException {

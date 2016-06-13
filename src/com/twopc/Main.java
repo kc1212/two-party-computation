@@ -23,6 +23,18 @@ public class Main {
 
         Alice alice = new Alice(phe.publicKey(), a, b, 3);
         Bob bob = new Bob(phe, 3);
-        bob.d1d2(alice.d());
+        Bob.Message msg = bob.d1d2(alice.d());
+        BigInteger[] es = alice.es(msg);
+        System.out.println("es");
+        for (BigInteger e  : es) {
+            System.out.println(phe.decrypt(e));
+        }
+
+        BigInteger lambda = bob.lambda(es);
+        System.out.println("lambda");
+        System.out.println(phe.decrypt(lambda));
+        System.out.println(phe.decrypt(msg.d2));
+        System.out.println("res");
+        System.out.println(phe.decrypt(alice.result(lambda)));
     }
 }

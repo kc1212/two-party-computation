@@ -23,7 +23,8 @@ public class Alice {
         this.a = a;
         this.b = b;
         this.l = l;
-        this.r = BigInteger.valueOf(27); // TODO randomise this
+        this.r = BigInteger.valueOf(27); // TODO randomise this, need to be in Z_n
+        // this.r = Paillier.encrypt(pk, Paillier.randomZStarN(pk.modLength, pk.n));
         this.s = BigInteger.ONE; // TODO randomise this
         if (l > 31) {
             throw new RuntimeException("value 'l' is too high");
@@ -33,7 +34,6 @@ public class Alice {
     public BigInteger d() throws PaillierException {
         BigInteger x = Paillier.encrypt(pk, Util.pow2(l)); // [2^l]
         BigInteger z = x.multiply(a.multiply(b.modInverse(pk.n2)).mod(pk.n2)).mod(pk.n2); // [2^l]*[a]*[b]^{-1}
-        // BigInteger r = Paillier.encrypt(pk, Paillier.randomZStarN(pk.modLength, pk.n2)); // TODO chec
         return z.multiply(Paillier.encrypt(pk, r)).mod(pk.n2);
     }
 
@@ -41,29 +41,35 @@ public class Alice {
         this.d2 = msg.d2;
 
         BigInteger[] es = new BigInteger[l];
+        BigInteger[] hs = new BigInteger[]{BigInteger.valueOf(2), BigInteger.valueOf(3), BigInteger.valueOf(4)};
+        System.out.println("vs");
         for (int i = 0; i < l; i++) {
             BigInteger tmp = BigInteger.valueOf(0);
             for (int j = i + 1; j < l; j++) {
-                tmp = tmp.add(Util.pow2(j).multiply(Util.bitAt(r, j)).mod(pk.n2)).mod(pk.n2);
+                tmp = tmp.add(Util.pow2(j).multiply(Util.bitAt(r, j)));
             }
-            BigInteger v = s.subtract(Util.bitAt(r, i).subtract(tmp)).mod(pk.n2);
-
+            BigInteger v = s.subtract(Util.bitAt(r, i)).subtract(tmp).mod(pk.n);
+            System.out.println(v);
             BigInteger c = Paillier.encrypt(pk, v).multiply(msg.ts[i]).mod(pk.n2);
-            BigInteger h = Paillier.randomZStarN(pk.modLength, pk.n);
-            es[i] = c.modPow(h, pk.n2);
+            // BigInteger h = Paillier.randomZStarN(pk.modLength, pk.n);
+            es[i] = c.modPow(hs[i], pk.n2);
         }
 
         return es;
     }
 
-    public BigInteger result(BigInteger lambda) throws PaillierException {
+    public BigInteger result(BigInteger _lambda) throws PaillierException {
+        BigInteger lambda;
         if (s.compareTo(BigInteger.ONE) == 0) {
-            // do nothing
+            lambda = _lambda;
+        } else {
+            lambda = Paillier.encrypt(pk, BigInteger.ONE).multiply(_lambda.modInverse(pk.n2));
         }
-        else {
-            lambda = Paillier.encrypt(pk, BigInteger.ONE).multiply(lambda.modInverse(pk.n2));
-        }
+        System.out.println("r/2^l");
+        System.out.println(r.divide(Util.pow2(l)));
         BigInteger tmp = Paillier.encrypt(pk, r.divide(Util.pow2(l))).modInverse(pk.n2); // [r / (2^l)]^{-1}
-        return d2.multiply(tmp).multiply(lambda.modInverse(pk.n2));
+        return d2.multiply(tmp)
+                 .multiply(lambda.modInverse(pk.n2))
+                 .mod(pk.n2);
     }
 }
