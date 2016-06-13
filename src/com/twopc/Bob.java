@@ -4,7 +4,6 @@ import com.twopc.paillier.Paillier;
 import com.twopc.paillier.PaillierException;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 public class Bob {
     public class Message {

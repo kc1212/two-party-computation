@@ -20,9 +20,8 @@ public class Alice {
         this.a = a;
         this.b = b;
         this.l = l;
-        this.r = BigInteger.valueOf(27); // TODO randomise this, need to be in Z_n
-        // this.r = Paillier.encrypt(pk, Paillier.randomZStarN(pk.modLength, pk.n));
-        this.s = BigInteger.ONE; // TODO randomise this
+        this.r = Paillier.randomZN(pk);
+        this.s = Util.randomS(pk.n);
         if (l > 31) {
             throw new RuntimeException("value 'l' is too high");
         }
@@ -48,8 +47,8 @@ public class Alice {
             BigInteger v = s.subtract(Util.bitAt(r, i)).subtract(tmp).mod(pk.n);
             // System.out.println(v);
             BigInteger c = Paillier.encrypt(pk, v).multiply(msg.ts[i]).mod(pk.n2);
-            // BigInteger h = Paillier.randomZStarN(pk.modLength, pk.n);
-            es[i] = c.modPow(hs[i], pk.n2);
+            BigInteger h = Paillier.randomZStarN(pk.modLength, pk.n);
+            es[i] = c.modPow(h, pk.n2);
         }
 
         return es;

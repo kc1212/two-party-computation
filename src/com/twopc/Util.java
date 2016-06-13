@@ -4,6 +4,7 @@ import com.twopc.paillier.Paillier;
 import com.twopc.paillier.PaillierException;
 
 import java.math.BigInteger;
+import java.util.Random;
 
 public class Util {
     public static BigInteger pow2(int l) {
@@ -24,5 +25,12 @@ public class Util {
             System.out.print(phe.decrypt(x) + " ");
         }
         System.out.println();
+    }
+
+    public static BigInteger randomS(BigInteger n) {
+        if ((new Random()).nextBoolean()) {
+            return BigInteger.ONE;
+        }
+        return BigInteger.valueOf(-1).mod(n);
     }
 }

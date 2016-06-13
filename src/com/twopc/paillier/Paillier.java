@@ -35,6 +35,7 @@ public class Paillier {
         public final BigInteger n2;
         public final BigInteger g;
         public final int modLength;
+
         public PublicKey(BigInteger n, BigInteger n2, BigInteger g, int modLength) {
             this.n = n;
             this.n2 = n2;
@@ -64,7 +65,7 @@ public class Paillier {
                 p.subtract(BigInteger.ONE).gcd(q.subtract(BigInteger.ONE)));
 
         n = p.multiply(q);              // n = p*q
-        n2 = n.multiply(n);        // n2 = n*n
+        n2 = n.multiply(n);             // n2 = n*n
 
         BigInteger tmp_g;
         do {
@@ -145,6 +146,17 @@ public class Paillier {
             r = new BigInteger(modLength, new Random());
         }
         while (r.compareTo(n) >= 0 || r.gcd(n).intValue() != 1);
+
+        return r;
+    }
+
+    public static BigInteger randomZN(PublicKey pk) {
+        BigInteger r;
+
+        do {
+            r = new BigInteger(pk.modLength, new Random());
+        }
+        while (r.compareTo(BigInteger.ZERO) <= 0 || r.compareTo(pk.n) >= 0);
 
         return r;
     }

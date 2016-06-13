@@ -10,8 +10,8 @@ public class Main {
 
     public static void main(String[] args) throws PaillierException {
         Paillier phe = new Paillier(30);
-        BigInteger a = phe.encrypt(new BigInteger("6"));
-        BigInteger b = phe.encrypt(new BigInteger("5"));
+        BigInteger a = phe.encrypt(new BigInteger("1"));
+        BigInteger b = phe.encrypt(new BigInteger("7"));
 
         /*
         Database db = new Database(10);
