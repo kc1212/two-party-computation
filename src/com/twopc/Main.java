@@ -3,32 +3,51 @@ package com.twopc;
 import com.twopc.paillier.PaillierException;
 
 import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+
+    static final int M = 1000000;
 
     public static void main(String[] args) throws PaillierException {
         int dbLen = 10;
         if (args.length > 0) {
             dbLen = Integer.parseInt(args[0]);
         }
-        Database db = new Database(dbLen);
-        db.printPt();
+        Instant startInstant;
 
+        startInstant = Instant.now();
+        Database db = new Database(dbLen);
+        // db.printPt();
+        System.out.println("Duration for database creation (ms):\t"
+                + Duration.between(startInstant, Instant.now()).getNano() / M);
+
+        // initiate value x, Alice and Bob
         BigInteger x = BigInteger.valueOf(40);
         Alice alice = new Alice(db.phe.publicKey());
         Bob bob = new Bob(db.phe);
 
         // get a list of indices of ages that are greater than x
         // and then check with the plaintext
+        startInstant = Instant.now();
         List<Integer> secureIdxs = listOfOlderThanX(alice, bob, db, x);
+        long dur = Duration.between(startInstant, Instant.now()).getNano() / M;
+        System.out.println("Duration to find number of people (ms):\t" + dur);
+        System.out.println("Duration for comparison protocol (ms):\t" + dur / db.ct.size());
+
         List<Integer> insecureIdxs = db.listOfOlderThanX(x);
         assert secureIdxs.equals(insecureIdxs);
 
         // compute the total income of the rows in the list from above
         // check with the plaintext
+        startInstant = Instant.now();
         int secureSum = sumIncomeOnIdx(db, secureIdxs);
+        System.out.println("Duration for Paillier summation (ms):\t"
+                + Duration.between(startInstant, Instant.now()).getNano() / M);
+
         int insecureSum = db.sumIncomeOnIdx(insecureIdxs);
         assert secureSum == insecureSum;
 

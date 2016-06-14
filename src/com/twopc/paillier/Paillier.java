@@ -142,8 +142,9 @@ public class Paillier {
     public static BigInteger randomZStarN(int modLength, BigInteger n) {
         BigInteger r;
 
+        Random rand = new Random();
         do {
-            r = new BigInteger(modLength, new Random());
+            r = new BigInteger(modLength, rand);
         }
         while (r.compareTo(n) >= 0 || r.gcd(n).intValue() != 1);
 
@@ -153,8 +154,9 @@ public class Paillier {
     public static BigInteger randomZN(PublicKey pk) {
         BigInteger r;
 
+        Random rand = new Random();
         do {
-            r = new BigInteger(pk.modLength, new Random());
+            r = new BigInteger(pk.modLength, rand);
         }
         while (r.compareTo(BigInteger.ZERO) <= 0 || r.compareTo(pk.n) >= 0);
 
