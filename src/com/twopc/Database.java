@@ -10,7 +10,7 @@ import java.util.Random;
 
 public class Database {
 
-    class Triple {
+    public class Triple {
         public Triple(BigInteger name, BigInteger age, BigInteger income) {
             this.name = name;
             this.age = age;
@@ -33,7 +33,7 @@ public class Database {
 
     final int PAILLIER_BITS = 2048;
 
-    public final List<Triple> pt;
+    private final List<Triple> pt;
     public final List<Triple> ct;
     public final Paillier phe;
 
@@ -69,5 +69,14 @@ public class Database {
         for (Triple t : ct) {
             t.decrypt(phe).print();
         }
+    }
+
+    public int countGreaterThan(BigInteger x) {
+        int i = 0;
+        for (Triple t : pt) {
+            if (t.age.compareTo(x) == 1)
+                i++;
+        }
+        return i;
     }
 }
