@@ -9,14 +9,18 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws PaillierException {
-        Database db = new Database(10);
+        int dbLen = 10;
+        if (args.length > 0) {
+            dbLen = Integer.parseInt(args[0]);
+        }
+        Database db = new Database(dbLen);
         db.printPt();
 
         BigInteger x = BigInteger.valueOf(40);
         Alice alice = new Alice(db.phe.publicKey());
         Bob bob = new Bob(db.phe);
 
-        // get a list of indices of ages that are greater or equal to x
+        // get a list of indices of ages that are greater than x
         // and then check with the plaintext
         List<Integer> secureIdxs = listOfOlderThanX(alice, bob, db, x);
         List<Integer> insecureIdxs = db.listOfOlderThanX(x);
@@ -28,13 +32,20 @@ public class Main {
         int insecureSum = db.sumIncomeOnIdx(insecureIdxs);
         assert secureSum == insecureSum;
 
-        System.out.println("There are " + secureIdxs.size() + " rows with age greater or equal to " + x + ".");
+        System.out.println("There are " + secureIdxs.size() + " rows with age greater than " + x + ".");
         System.out.print("These are: ");
         secureIdxs.forEach(p -> System.out.print(p + " "));
-        System.out.println();
-        System.out.println("The sum of their income is: " + secureSum);
+        System.out.print("\b.\n");
+        System.out.println("The sum of their income is: " + secureSum + ".");
     }
 
+    /**
+     * Use Paillier Homomorphic Encryption to add the income of the rows index by `is`.
+     * @param db
+     * @param is
+     * @return The total income.
+     * @throws PaillierException
+     */
     private static int sumIncomeOnIdx(Database db, List<Integer> is) throws PaillierException {
         BigInteger esum = db.phe.encrypt(BigInteger.ZERO);
         for (Integer i : is) {
@@ -43,6 +54,15 @@ public class Main {
         return db.phe.decrypt(esum).intValue();
     }
 
+    /**
+     * Finds all the rows in the database `db` that are greater than `x`.
+     * @param alice
+     * @param bob
+     * @param db
+     * @param x
+     * @return A list of indices representing rows that are greater than `x`.
+     * @throws PaillierException
+     */
     private static List<Integer> listOfOlderThanX(Alice alice, Bob bob, Database db, BigInteger x) throws PaillierException {
         List<Integer> is = new ArrayList<>();
         for (int i = 0; i < db.ct.size(); i++) {
@@ -53,6 +73,16 @@ public class Main {
         return is;
     }
 
+    /**
+     * The secure comparison protocol is implemented here.
+     * @param alice Alice wishes to compare two encrypted values `a` and `b`.
+     * @param bob Bob holds the private key to the databse.
+     * @param a
+     * @param b
+     * @param l Bit length used in the protocol.
+     * @return True if a > b otherwise false.
+     * @throws PaillierException
+     */
     private static boolean protocol(Alice alice, Bob bob, BigInteger a, BigInteger b, int l) throws PaillierException {
         alice.prep(a, b, l);
         bob.prep(l);
@@ -60,10 +90,6 @@ public class Main {
         Bob.Message msg = bob.msg(alice.d());
         BigInteger[] es = alice.es(msg);
         BigInteger lambda = bob.lambda(es);
-        int res = bob.phe.decrypt(alice.result(lambda)).intValue();
-
-        if (res == 1)
-            return false;
-        return true;
+        return 1 != bob.phe.decrypt(alice.result(lambda)).intValue();
     }
 }
