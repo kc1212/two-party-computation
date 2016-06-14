@@ -7,24 +7,28 @@ import java.math.BigInteger;
 
 public class Alice {
     public final Paillier.PublicKey pk;
-    public final BigInteger a;
-    public final BigInteger b;
-    public final BigInteger r;
-    public final int l;
+    public BigInteger a;
+    public BigInteger b;
+    public BigInteger r;
+    public int l;
 
     public BigInteger d2;
     public BigInteger s;
 
-    public Alice(Paillier.PublicKey pk, BigInteger a, BigInteger b, int l) {
+    public Alice(Paillier.PublicKey pk) {
         this.pk = pk;
-        this.a = a;
-        this.b = b;
-        this.l = l;
         this.r = Paillier.randomZN(pk);
         this.s = Util.randomS(pk.n);
         if (l > 31) {
             throw new RuntimeException("value 'l' is too high");
         }
+    }
+
+
+    public void prep(BigInteger a, BigInteger b, int l) {
+        this.a = a;
+        this.b = b;
+        this.l = l;
     }
 
     public BigInteger d() throws PaillierException {

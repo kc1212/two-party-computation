@@ -18,13 +18,17 @@ public class Bob {
     }
 
     public final Paillier phe;
-    public final int l;
-    public Bob(Paillier phe, int l) {
+    public int l;
+
+    public Bob(Paillier phe) {
         this.phe = phe;
-        this.l = l;
         if (l > 31) {
             throw new RuntimeException("value 'l' is too high");
         }
+    }
+
+    public void prep(int l) {
+        this.l = l;
     }
 
     public Message msg(BigInteger ed) throws PaillierException {

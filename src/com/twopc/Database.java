@@ -71,12 +71,20 @@ public class Database {
         }
     }
 
-    public int countGreaterThan(BigInteger x) {
-        int i = 0;
-        for (Triple t : pt) {
-            if (t.age.compareTo(x) == 1)
-                i++;
+    public List<Integer> listOfOlderThanX(BigInteger x) {
+        List<Integer> is = new ArrayList<>();
+        for (int i = 0; i < pt.size(); i++) {
+            if (pt.get(i).age.compareTo(x) != -1)
+                is.add(i);
         }
-        return i;
+        return is;
+    }
+
+    public int sumIncomeOnIdx(List<Integer> is) {
+        BigInteger sum = BigInteger.ZERO;
+        for (Integer i : is) {
+            sum = sum.add(pt.get(i).income);
+        }
+        return sum.intValue();
     }
 }
