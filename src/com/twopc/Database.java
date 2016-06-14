@@ -10,8 +10,8 @@ import java.util.Random;
 
 public class Database {
 
-    public class Triple {
-        public Triple(BigInteger name, BigInteger age, BigInteger income) {
+    public class Row {
+        public Row(BigInteger name, BigInteger age, BigInteger income) {
             this.name = name;
             this.age = age;
             this.income = income;
@@ -23,8 +23,8 @@ public class Database {
             System.out.format("%6.6s\t%2.2s\t%s\n", decodeString(name), age.toString(), income.toString());
         }
 
-        private Triple decrypt(Paillier phe) throws PaillierException {
-            return new Triple(
+        private Row decrypt(Paillier phe) throws PaillierException {
+            return new Row(
                     phe.decrypt(this.name),
                     phe.decrypt(this.age),
                     phe.decrypt(this.income));
@@ -33,10 +33,15 @@ public class Database {
 
     final int PAILLIER_BITS = 2048;
 
-    private final List<Triple> pt;
-    public final List<Triple> ct;
+    private final List<Row> pt;
+    public final List<Row> ct;
     public final Paillier phe;
 
+    /**
+     * Create a new database, the constructor will also encrypt the content.
+     * @param n
+     * @throws PaillierException
+     */
     public Database(int n) throws PaillierException {
         pt = new ArrayList<>();
         ct = new ArrayList<>();
@@ -48,8 +53,8 @@ public class Database {
             BigInteger age = BigInteger.valueOf(18 + rand.nextInt(90 - 18));
             BigInteger income = BigInteger.valueOf(10000 + rand.nextInt(100000 - 10000));
 
-            pt.add(new Triple(name, age, income));
-            ct.add(new Triple(phe.encrypt(name), phe.encrypt(age), phe.encrypt(income)));
+            pt.add(new Row(name, age, income));
+            ct.add(new Row(phe.encrypt(name), phe.encrypt(age), phe.encrypt(income)));
         }
     }
 
@@ -62,15 +67,20 @@ public class Database {
     }
 
     public void printPt() {
-        pt.forEach(Triple::print);
+        pt.forEach(Row::print);
     }
 
     public void decryptAndPrint() throws PaillierException {
-        for (Triple t : ct) {
-            t.decrypt(phe).print();
+        for (Row r : ct) {
+            r.decrypt(phe).print();
         }
     }
 
+    /**
+     * Produces a list of indices of the data for entries that have an age greater than `x`. Operates on plaintext.
+     * @param x
+     * @return
+     */
     public List<Integer> listOfOlderThanX(BigInteger x) {
         List<Integer> is = new ArrayList<>();
         for (int i = 0; i < pt.size(); i++) {
@@ -80,6 +90,11 @@ public class Database {
         return is;
     }
 
+    /**
+     * Produces the sum of the income for every entry specified in `is`. Operates on plaintext.
+     * @param is
+     * @return
+     */
     public int sumIncomeOnIdx(List<Integer> is) {
         BigInteger sum = BigInteger.ZERO;
         for (Integer i : is) {

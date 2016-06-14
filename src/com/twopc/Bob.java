@@ -27,10 +27,20 @@ public class Bob {
         }
     }
 
+    /**
+     * Prepare Bob with initial values, this function should be called when a new round of the comparison protocol begins.
+     * @param l
+     */
     public void prep(int l) {
         this.l = l;
     }
 
+    /**
+     * Receive [d] from Alice and compute [d^1], [d^2] and [t_i] for i = {0, ..., l-1}
+     * @param ed
+     * @return
+     * @throws PaillierException
+     */
     public Message msg(BigInteger ed) throws PaillierException {
         BigInteger d = phe.decrypt(ed);
         BigInteger x = Util.pow2(l);
@@ -49,6 +59,12 @@ public class Bob {
         return new Message(phe.encrypt(d1), phe.encrypt(d2), ts);
     }
 
+    /**
+     * Receive [e_i] from Alice and compute [~lambda].
+     * @param es
+     * @return
+     * @throws PaillierException
+     */
     public BigInteger lambda(BigInteger[] es) throws PaillierException {
         for (BigInteger e : es) {
             if (phe.decrypt(e).compareTo(BigInteger.ZERO) == 0) {

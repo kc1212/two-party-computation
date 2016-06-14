@@ -10,8 +10,6 @@ import java.util.List;
 
 public class Main {
 
-    static final int M = 1000000;
-
     public static void main(String[] args) throws PaillierException {
         int dbLen = 10;
         if (args.length > 0) {
@@ -23,7 +21,7 @@ public class Main {
         Database db = new Database(dbLen);
         // db.printPt();
         System.out.println("Duration for database creation (ms):\t"
-                + Duration.between(startInstant, Instant.now()).getNano() / M);
+                + Duration.between(startInstant, Instant.now()).toMillis());
 
         // initiate value x, Alice and Bob
         BigInteger x = BigInteger.valueOf(40);
@@ -34,7 +32,7 @@ public class Main {
         // and then check with the plaintext
         startInstant = Instant.now();
         List<Integer> secureIdxs = listOfOlderThanX(alice, bob, db, x);
-        long dur = Duration.between(startInstant, Instant.now()).getNano() / M;
+        long dur = Duration.between(startInstant, Instant.now()).toMillis();
         System.out.println("Duration to find number of people (ms):\t" + dur);
         System.out.println("Duration for comparison protocol (ms):\t" + dur / db.ct.size());
 
@@ -46,7 +44,7 @@ public class Main {
         startInstant = Instant.now();
         int secureSum = sumIncomeOnIdx(db, secureIdxs);
         System.out.println("Duration for Paillier summation (ms):\t"
-                + Duration.between(startInstant, Instant.now()).getNano() / M);
+                + Duration.between(startInstant, Instant.now()).toMillis());
 
         int insecureSum = db.sumIncomeOnIdx(insecureIdxs);
         assert secureSum == insecureSum;
@@ -74,7 +72,7 @@ public class Main {
     }
 
     /**
-     * Finds all the rows in the database `db` that are greater than `x`.
+     * Finds all the rows in the database `db` that are greater than `x`. Uses secure comparison protocol.
      * @param alice
      * @param bob
      * @param db
