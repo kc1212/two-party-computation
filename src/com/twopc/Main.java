@@ -12,19 +12,20 @@ public class Main {
 
     public static void main(String[] args) throws PaillierException {
         int dbLen = 10;
+        int intX = 40;
         if (args.length > 0) {
             dbLen = Integer.parseInt(args[0]);
+            intX = Integer.parseInt(args[1]);
         }
-        Instant startInstant;
 
-        startInstant = Instant.now();
+        Instant startInstant = Instant.now();
         Database db = new Database(dbLen);
         // db.printPt();
         System.out.println("Duration for database creation (ms):\t"
                 + Duration.between(startInstant, Instant.now()).toMillis());
 
         // initiate value x, Alice and Bob
-        BigInteger x = BigInteger.valueOf(40);
+        BigInteger x = BigInteger.valueOf(intX);
         Alice alice = new Alice(db.phe.publicKey());
         Bob bob = new Bob(db.phe);
 
@@ -83,7 +84,8 @@ public class Main {
     private static List<Integer> listOfOlderThanX(Alice alice, Bob bob, Database db, BigInteger x) throws PaillierException {
         List<Integer> is = new ArrayList<>();
         for (int i = 0; i < db.ct.size(); i++) {
-            if (protocol(alice, bob, db.phe.encrypt(x), db.ct.get(i).age, 7)) {
+            // length l is 7 because max age is 90
+            if (protocol(alice, bob, db.ct.get(i).age, db.phe.encrypt(x), 7)) {
                 is.add(i);
             }
         }
@@ -107,6 +109,15 @@ public class Main {
         Bob.Message msg = bob.msg(alice.d());
         BigInteger[] es = alice.es(msg);
         BigInteger lambda = bob.lambda(es);
-        return 1 != bob.phe.decrypt(alice.result(lambda)).intValue();
+
+        BigInteger maskedRes = bob.phe.decrypt(alice.maskedResult(lambda));
+        int res = alice.unmaskResult(maskedRes).intValue();
+
+        if (res == 1)
+            return true;
+        else if (res == 0)
+            return false;
+        else
+            throw new RuntimeException("Invalid result");
     }
 }

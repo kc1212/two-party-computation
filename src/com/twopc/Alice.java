@@ -4,12 +4,14 @@ import com.twopc.paillier.Paillier;
 import com.twopc.paillier.PaillierException;
 
 import java.math.BigInteger;
+import java.util.Random;
 
 public class Alice {
     public final Paillier.PublicKey pk;
     public BigInteger a;
     public BigInteger b;
     public BigInteger r;
+    public BigInteger r2; // for masking the final result
     public int l;
 
     public BigInteger d2;
@@ -17,11 +19,6 @@ public class Alice {
 
     public Alice(Paillier.PublicKey pk) {
         this.pk = pk;
-        this.r = Paillier.randomZN(pk);
-        this.s = Util.randomS(pk.n);
-        if (l > 31) {
-            throw new RuntimeException("value 'l' is too high");
-        }
     }
 
     /**
@@ -34,6 +31,13 @@ public class Alice {
         this.a = a;
         this.b = b;
         this.l = l;
+        this.r = new BigInteger(80 + l + 1, new Random()); // can't be larger than n
+        this.s = Util.randomS(pk.n);
+
+        // we assume plaintext are 32 bit integers and can't be larger
+        if (l > 32) {
+            throw new RuntimeException("value 'l' is too high");
+        }
     }
 
     /**
@@ -72,12 +76,35 @@ public class Alice {
     }
 
     /**
-     * Take [~lambda] from Bob and compute [z_l].
+     * Takes [~lambda] from Bob and compute the masked result [C'] = [C]*[r2] = [C + r2].
      * @param _lambda
      * @return
      * @throws PaillierException
      */
-    public BigInteger result(BigInteger _lambda) throws PaillierException {
+    public BigInteger maskedResult(BigInteger _lambda) throws PaillierException {
+        this.r2 = new BigInteger(32 + 80, new Random());
+        return this.result(_lambda)
+                .multiply(Paillier.encrypt(pk, r2))
+                .mod(pk.n2);
+    }
+
+    /**
+     * Takes C' from Bob (after decrypting it), then compute the final result.
+     * @param res
+     * @return
+     * @throws PaillierException
+     */
+    public BigInteger unmaskResult(BigInteger res) throws PaillierException {
+        return res.subtract(r2);
+    }
+
+    /**
+     * Takes [~lambda] from Bob and compute [z_l].
+     * @param _lambda
+     * @return
+     * @throws PaillierException
+     */
+    private BigInteger result(BigInteger _lambda) throws PaillierException {
         BigInteger lambda;
         if (s.compareTo(BigInteger.ONE) == 0) {
             lambda = _lambda;
